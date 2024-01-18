@@ -1,0 +1,23 @@
+{
+  "name": "puppeteer-auto",
+  "version": "1.0.0",
+  "description": "puppeteer auto web",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "start": "node ./build/index.js https://mmm.btd.com/"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "puppeteer": "^21.7.0",
+    "rxjs": "^7.8.1"
+  }
+}
