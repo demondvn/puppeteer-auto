@@ -1,5 +1,5 @@
 import { Action } from './action';
-
+require('dotenv').config();
 const link = process.argv[2];
 
 if (!link) {
@@ -8,3 +8,4 @@ if (!link) {
 }
 
 Action(link);
+console.log(process.env.USER_DATA_DIR)

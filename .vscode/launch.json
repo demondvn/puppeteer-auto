@@ -19,7 +19,7 @@
                 "-r",
                 "ts-node/register",
                 "${workspaceFolder}/src/index.ts",
-                "https://www.hello-algo.com/"
+                "https://open.lazada.com/apps/doc/api?path=%2Fauth%2Ftoken%2Fcreate"
             ],
             "sourceMaps": true,
             // "console": "integratedTerminal",
