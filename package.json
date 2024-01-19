@@ -1,5 +1,5 @@
 {
-  "name": "puppeteer-auto",
+  "name": "site-load",
   "version": "1.0.0",
   "description": "puppeteer auto web",
   "main": "index.js",
@@ -8,6 +8,7 @@
     "build": "tsc",
     "start": "node ./build/index.js https://open.lazada.com/apps/doc/api?path=%2Fauth%2Ftoken%2Fcreate"
   },
+  
   "keywords": [],
   "author": "",
   "license": "ISC",
