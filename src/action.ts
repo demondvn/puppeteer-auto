@@ -1,7 +1,7 @@
 import puppeteer, { Page } from "puppeteer";
 import { Subject } from "rxjs";
 import { URL } from "url";
-
+import fs from 'fs-extra'
 
 const LINKS: string[] = []
 const LOADED: string[] = []
@@ -14,22 +14,23 @@ const BLOCK:string[] = [
     
 ]
 const sub_next = new Subject();
-export async function Action(link: string) {
-    console.log(process.env.BROWSER);
+export async function Action(link: string,data:string,browserPath:string) {
+    // console.log(process.env.BROWSER);
+
     const url = new URL(link);
     const domain = url.hostname;
 
 
     const browser = await puppeteer.launch({
-        executablePath: process.env.BROWSER || undefined,
+        executablePath: browserPath || process.env.BROWSER || undefined,
         headless: false,
         defaultViewport: null,
-        userDataDir: process.env.USER_DATA_DIR || undefined,
+        userDataDir: data || process.env.USER_DATA_DIR || undefined,
         args: [
             "--ignore-certificate-errors",
             "--no-sandbox",
             "--disable-setuid-sandbox",
-            "--userDataDir=" + process.env.USER_DATA_DIR
+            "--userDataDir=" + (data || process.env.USER_DATA_DIR)
         ]
     })
     const page = await browser.pages().then(pages => pages[0]);
@@ -40,6 +41,7 @@ export async function Action(link: string) {
     await delay(5000);
     //Get all Link on page save to array
     LOADED.push(link);
+    await loadData(data);
     await collectLink(page, domain);
     //Auto scroll to end of page with delay on step
     Scroll(page);
@@ -57,8 +59,20 @@ export async function Action(link: string) {
             }
 
         }
+        writeData(data,link || '');
     })
 }
+//Write file Link and Loader to file
+function writeData(path:string,link:string) {
+    if(!fs.existsSync(path)) fs.mkdirSync(path);
+    fs.appendFileSync(path+'/links.txt',link+'\n');
+}
+ function loadData(path:string) {   
+    if(!fs.existsSync(path+'/links.txt')) return;
+    const loaded = fs.readFileSync(path+'/loaded.txt','utf-8').split('\n');
+    LOADED.push(...loaded);
+}
+
 async function collectLink(page: Page, domain: string) {
     const links = await page.$$eval('a', as => as.map(a => a.href));
     links.forEach(i => {

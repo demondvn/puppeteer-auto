@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Command } from 'commander';
 import { Action } from './action';
 require('dotenv').config();
@@ -19,6 +20,11 @@ program
 
 program.
 argument('<link>', "Link to load site")
-.action((link) => Action(link));
+.option('-p, --path <path>', 'Path to save site','./data')
+.option('-b, --browser <browser>', 'Browser to load site')
+.action((link) =>{
+    console.log(program.opts())
+    Action(link,program.opts().path,program.opts().browser)
+});
 
 program.parse(process.argv);
