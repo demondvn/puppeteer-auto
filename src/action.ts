@@ -10,16 +10,23 @@ const BLOCK:string[] = [
     'register',
     'forgot-password',
     'reset-password',
-    'admin',
-    
+    'logout',
+    'start-of-content',
+    'author='
 ]
 const sub_next = new Subject();
-export async function Action(link: string,data:string,browserPath:string) {
+export function clearData(data:string) {
+    LINKS.length = 0;
+    LOADED.length = 0; 
+    fs.removeSync(data+'/loaded.txt');
+
+}
+export async function Action(link: string,data:string,browserPath:string,baseUrl:string) {
     // console.log(process.env.BROWSER);
 
     const url = new URL(link);
-    const domain = url.hostname;
-
+    const domain = url.origin;
+    baseUrl = baseUrl || domain;
 
     const browser = await puppeteer.launch({
         executablePath: browserPath || process.env.BROWSER || undefined,
@@ -38,11 +45,11 @@ export async function Action(link: string,data:string,browserPath:string) {
         //Allow ERR_CERT_AUTHORITY_INVALID 
 
     });
-    await delay(5000);
+    await delay(10000);
     //Get all Link on page save to array
     LOADED.push(link);
     await loadData(data);
-    await collectLink(page, domain);
+    await collectLink(page, baseUrl);
     //Auto scroll to end of page with delay on step
     Scroll(page);
     sub_next.subscribe(async (next) => {
@@ -52,34 +59,56 @@ export async function Action(link: string,data:string,browserPath:string) {
                 LOADED.push(link);
                 await page.goto(link);
                 await delay(5000);
-                await collectLink(page, domain);
+                await collectLink(page, baseUrl);
                 await Scroll(page);
             } catch (error) {
                 sub_next.next(next);
+                console.log(error);
             }
 
         }
         writeData(data,link || '');
+        if(LINKS.length === 0) {
+            console.log('Done');
+            await browser.close();
+            // process.exit(0);
+        }
     })
 }
 //Write file Link and Loader to file
 function writeData(path:string,link:string) {
     if(!fs.existsSync(path)) fs.mkdirSync(path);
-    fs.appendFileSync(path+'/links.txt',link+'\n');
+    fs.appendFileSync(path+'/loaded.txt',link+'\n');
+    
 }
  function loadData(path:string) {   
-    if(!fs.existsSync(path+'/links.txt')) return;
+    if(!fs.existsSync(path+'/loaded.txt')) return;
     const loaded = fs.readFileSync(path+'/loaded.txt','utf-8').split('\n');
     LOADED.push(...loaded);
 }
 
 async function collectLink(page: Page, domain: string) {
     const links = await page.$$eval('a', as => as.map(a => a.href));
+    const baseUrl = new URL( page.url()).origin;
+
     links.forEach(i => {
-        const url = new URL(i);
-        if (url.hostname === domain && !LOADED.includes(i) && !LINKS.includes(i) && !BLOCK.includes(url.pathname)) {
-            LINKS.push(i);
+        if(!i.startsWith('http')){
+            i = baseUrl+i
+            console.log('Fix link: ',i);
         }
+        try {
+                const url = new URL(i);
+            if(url && BLOCK.some(b => url.toString().includes(b))) {
+                console.log('Block: ',url.href);
+                
+            }else if (url && url.href.startsWith(domain) && !LOADED.includes(i) && !LINKS.includes(i)) {
+                LINKS.push(i);
+                console.log('Add link: ',i);
+            }
+        } catch (error) {
+            console.log('Error: ',i,error);
+        }
+        
     })
 
     console.log('Link count: ', LINKS.length);
@@ -100,23 +129,24 @@ async function Scroll(page: Page) {
     const scroll = await page.evaluate(async () => {
 
         //@ts-ignore
-        const stepHight = window.innerHeight / 2;
+        const stepHight = (window.innerHeight / 2) ;
         //@ts-ignore
-        const step = document.body.scrollHeight / stepHight;
+        const step = (document.body.scrollHeight / stepHight) -2 ;
         for (let i = 0; i < step; i++) {
+            console.log('Scrolling: ', i,'/',step);
             //@ts-ignore
             window.scrollTo(0, stepHight * i);
             await randomDelay();
         }
         return true
-    })
+    },)
     sub_next.next(scroll);
 }
 
 //Random delay function  
 async function randomDelay() {
     await delay(Math.random() * 5000);
-    Math.random() > 0.9 ? await delay(20000) : await delay(500);
+    Math.random() > 0.8 ? await delay(20000) : await delay(500);
 }
 function delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));

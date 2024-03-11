@@ -1,6 +1,6 @@
 {
   "name": "site-load",
-  "version": "1.0.0",
+  "version": "1.0.4",
   "description": "puppeteer auto web",
   "main": "./build/index.js",
   "scripts": {

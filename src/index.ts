@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import { Command } from 'commander';
-import { Action } from './action';
+import { Action, clearData } from './action';
 require('dotenv').config();
 
 const link = process.argv[2];
@@ -22,9 +22,15 @@ program.
 argument('<link>', "Link to load site")
 .option('-p, --path <path>', 'Path to save site','./data')
 .option('-b, --browser <browser>', 'Browser to load site')
-.action((link) =>{
+.option('-o, --overwrite', 'Overwrite data  ')
+.option('-u, --url <url>', 'Url to load site')
+.action(async (link) =>{
     console.log(program.opts())
-    Action(link,program.opts().path,program.opts().browser)
+    if(program.opts().overwrite) {
+        console.log('Overwrite')
+        clearData(program.opts().path);
+    }
+    Action(link,program.opts().path,program.opts().browser,program.opts().url);
 });
 
 program.parse(process.argv);
